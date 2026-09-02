@@ -1,586 +1,808 @@
-<!doctype html>
-<html lang="pt-BR">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-<head>
-
-  <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1">
-
-  <meta
-    name="theme-color"
-    content="#05070b">
-
-  <title>
-    UB. Studio Manager
-  </title>
+import {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  STORAGE_BUCKET,
+  DEMO_MODE
+} from "./config.js";
 
 
-  <script src="https://cdn.tailwindcss.com"></script>
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
+);
 
-  <script src="https://unpkg.com/lucide@latest"></script>
+
+// ===============================
+// ELEMENTOS
+// ===============================
+
+const loginView = document.getElementById("loginView");
+const dashboard = document.getElementById("dashboard");
+
+const loginForm = document.getElementById("loginForm");
+const projectForm = document.getElementById("projectForm");
+
+const logoutBtn = document.getElementById("logout");
+
+const newBtn = document.getElementById("newBtn");
+
+const cancelBtn = document.getElementById("cancelBtn");
+const cancelBtn2 = document.getElementById("cancelBtn2");
+
+const formWrap = document.getElementById("formWrap");
+
+const formTitle = document.getElementById("formTitle");
+
+const projectList = document.getElementById("projectList");
+
+const statusEl = document.getElementById("status");
 
 
-  <style>
+// ===============================
+// CAMPOS
+// ===============================
 
-    body {
-      background: #05070b;
-      color: white;
-      font-family:
-        Inter,
-        system-ui,
-        sans-serif;
+const projectId = document.getElementById("projectId");
+
+const title = document.getElementById("title");
+
+const year = document.getElementById("year");
+
+const division = document.getElementById("division");
+
+const color = document.getElementById("color");
+
+const description = document.getElementById("description");
+
+const imageFile = document.getElementById("imageFile");
+
+const currentImage = document.getElementById("currentImage");
+
+const featured = document.getElementById("featured");
+
+const published = document.getElementById("published");
+
+
+// ===============================
+// STATUS
+// ===============================
+
+function setStatus(message, error = false) {
+
+  if (!statusEl) return;
+
+  statusEl.textContent = message;
+
+  statusEl.className =
+    error
+      ? "mb-6 text-sm text-red-400"
+      : "mb-6 text-sm text-white/50";
+
+}
+
+
+// ===============================
+// LOGIN
+// ===============================
+
+loginForm?.addEventListener(
+  "submit",
+  async (event) => {
+
+    event.preventDefault();
+
+    const email =
+      document.getElementById("email").value.trim();
+
+    const password =
+      document.getElementById("password").value;
+
+
+    setStatus("Entrando...");
+
+
+    const { error } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+
+    if (error) {
+
+      setStatus(
+        "Não foi possível entrar: " +
+        error.message,
+        true
+      );
+
+      return;
     }
 
-    input,
-    textarea,
-    select {
 
-      background: #0b1018;
+    setStatus("Login realizado.");
 
-      border:
-        1px solid #243041;
+    await showDashboard();
 
-      color: white;
-
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-
-      outline:
-        2px solid #18bdf2;
-
-      outline-offset:
-        2px;
-
-    }
-
-    .glass {
-
-      background:
-        rgba(255,255,255,.045);
-
-      backdrop-filter:
-        blur(18px);
-
-      border:
-        1px solid
-        rgba(255,255,255,.1);
-
-    }
-
-  </style>
-
-</head>
+  }
+);
 
 
-<body>
+// ===============================
+// LOGOUT
+// ===============================
 
-<main class="min-h-screen">
+logoutBtn?.addEventListener(
+  "click",
+  async () => {
 
+    await supabase.auth.signOut();
 
-  <!-- HEADER -->
+    showLogin();
 
-  <header
-    class="border-b
-           border-white/10">
-
-    <div
-      class="max-w-6xl mx-auto
-             px-5 py-5
-             flex items-center
-             justify-between">
-
-      <a
-        href="index.html"
-        class="font-black
-               tracking-[.15em]">
-
-        UB. STUDIO MANAGER
-
-      </a>
+  }
+);
 
 
-      <button
-        id="logout"
-        class="hidden
-               text-sm
-               text-white/60
-               hover:text-white">
+// ===============================
+// MOSTRAR LOGIN
+// ===============================
 
-        Sair
+function showLogin() {
 
-      </button>
+  loginView?.classList.remove("hidden");
 
-    </div>
+  dashboard?.classList.add("hidden");
 
-  </header>
+  logoutBtn?.classList.add("hidden");
 
+  formWrap?.classList.add("hidden");
 
-  <!-- CONTEÚDO -->
-
-  <section
-    class="max-w-6xl mx-auto
-           px-5 py-10">
+}
 
 
-    <div
-      id="status"
-      class="mb-6
-             text-sm
-             text-white/50">
-    </div>
+// ===============================
+// MOSTRAR DASHBOARD
+// ===============================
+
+async function showDashboard() {
+
+  loginView?.classList.add("hidden");
+
+  dashboard?.classList.remove("hidden");
+
+  logoutBtn?.classList.remove("hidden");
+
+  await loadProjects();
+
+}
 
 
-    <!-- LOGIN -->
+// ===============================
+// CARREGAR PROJETOS
+// ===============================
 
-    <div
-      id="loginView"
-      class="max-w-md mx-auto
-             glass rounded-3xl
-             p-7">
+async function loadProjects() {
 
-      <h1
-        class="text-3xl
-               font-black">
+  projectList.innerHTML = "";
 
-        Acesso administrativo
+  setStatus("Carregando projetos...");
 
-      </h1>
+
+  const {
+    data,
+    error
+  } = await supabase
+    .from("projects")
+    .select("*")
+    .order("created_at", {
+      ascending: false
+    });
+
+
+  if (error) {
+
+    setStatus(
+      "Erro ao carregar projetos: " +
+      error.message,
+      true
+    );
+
+    return;
+  }
+
+
+  if (!data || data.length === 0) {
+
+    projectList.innerHTML = `
+      <div class="md:col-span-2 glass rounded-3xl p-8 text-center text-white/45">
+        Nenhum projeto cadastrado ainda.
+      </div>
+    `;
+
+    setStatus("");
+
+    return;
+  }
+
+
+  data.forEach(renderProject);
+
+
+  setStatus(
+    `${data.length} projeto(s) encontrado(s).`
+  );
+
+}
+
+
+// ===============================
+// RENDER PROJETO
+// ===============================
+
+function renderProject(project) {
+
+  const card =
+    document.createElement("article");
+
+
+  card.className =
+    "glass rounded-3xl overflow-hidden";
+
+
+  const image =
+    project.image_url
+      ? `
+        <img
+          src="${escapeHtml(project.image_url)}"
+          alt="${escapeHtml(project.title)}"
+          class="w-full aspect-video object-cover">
+      `
+      : `
+        <div
+          class="w-full aspect-video
+                 flex items-center justify-center
+                 bg-white/5
+                 text-white/20">
+
+          SEM IMAGEM
+
+        </div>
+      `;
+
+
+  card.innerHTML = `
+
+    ${image}
+
+    <div class="p-5">
+
+      <div
+        class="flex items-center justify-between gap-3">
+
+        <h3
+          class="font-black text-xl">
+
+          ${escapeHtml(project.title)}
+
+        </h3>
+
+        <span
+          class="text-xs font-bold"
+          style="color:${escapeHtml(project.color)}">
+
+          ${project.division === "animation"
+            ? "ANIMATION"
+            : "PICTURES"}
+
+        </span>
+
+      </div>
 
 
       <p
-        class="mt-2
-               text-white/45
-               text-sm">
+        class="mt-2 text-sm text-white/45">
 
-        Entre com o usuário
-        criado no Supabase Auth.
+        ${project.year || "Ano não informado"}
 
       </p>
 
 
-      <form
-        id="loginForm"
-        class="mt-7
-               space-y-4">
+      <p
+        class="mt-3 text-sm text-white/60">
 
+        ${escapeHtml(project.description || "")}
 
-        <input
-          id="email"
-          type="email"
-          required
-          placeholder="E-mail"
-          class="w-full
-                 rounded-xl
-                 px-4 py-3">
-
-
-        <input
-          id="password"
-          type="password"
-          required
-          placeholder="Senha"
-          class="w-full
-                 rounded-xl
-                 px-4 py-3">
-
-
-        <button
-          type="submit"
-          class="w-full
-                 rounded-xl
-                 bg-white
-                 text-black
-                 py-3
-                 font-black">
-
-          ENTRAR
-
-        </button>
-
-
-      </form>
-
-    </div>
-
-
-    <!-- DASHBOARD -->
-
-    <div
-      id="dashboard"
-      class="hidden">
+      </p>
 
 
       <div
-        class="flex
-               flex-col
-               sm:flex-row
-               justify-between
-               gap-4">
+        class="mt-5 flex items-center
+               justify-between">
+
+        <span
+          class="text-xs
+                 ${project.published
+                   ? "text-green-400"
+                   : "text-white/35"}">
+
+          ${project.published
+            ? "PUBLICADO"
+            : "OCULTO"}
+
+        </span>
 
 
-        <div>
+        <div class="flex gap-2">
 
-          <p
-            class="text-cyan-300
-                   text-xs
-                   font-black
-                   uppercase
-                   tracking-[.3em]">
+          <button
+            class="editBtn rounded-full
+                   border border-white/15
+                   px-4 py-2
+                   text-xs font-bold">
 
-            Catálogo
+            EDITAR
 
-          </p>
-
-
-          <h1
-            class="mt-2
-                   text-4xl
-                   font-black">
-
-            Projetos
-
-          </h1>
-
-        </div>
-
-
-        <button
-          id="newBtn"
-          class="rounded-full
-                 bg-white
-                 text-black
-                 px-5 py-3
-                 font-black">
-
-          + NOVO PROJETO
-
-        </button>
-
-      </div>
-
-
-      <!-- LISTA -->
-
-      <div
-        id="projectList"
-        class="mt-8
-               grid
-               md:grid-cols-2
-               gap-4">
-      </div>
-
-
-      <!-- FORMULÁRIO -->
-
-      <div
-        id="formWrap"
-        class="hidden
-               mt-10
-               glass
-               rounded-3xl
-               p-7">
-
-
-        <div
-          class="flex
-                 justify-between">
-
-          <h2
-            id="formTitle"
-            class="text-2xl
-                   font-black">
-
-            Novo projeto
-
-          </h2>
+          </button>
 
 
           <button
-            id="cancelBtn"
-            aria-label="Fechar">
+            class="deleteBtn rounded-full
+                   border border-red-500/30
+                   text-red-400
+                   px-4 py-2
+                   text-xs font-bold">
 
-            ✕
+            EXCLUIR
 
           </button>
 
         </div>
 
-
-        <form
-          id="projectForm"
-          class="mt-7
-                 grid
-                 md:grid-cols-2
-                 gap-5">
-
-
-          <input
-            type="hidden"
-            id="projectId">
-
-
-          <!-- NOME -->
-
-          <label
-            class="grid gap-2
-                   text-sm">
-
-            Nome
-
-            <input
-              id="title"
-              required
-              class="rounded-xl
-                     px-4 py-3">
-
-          </label>
-
-
-          <!-- ANO -->
-
-          <label
-            class="grid gap-2
-                   text-sm">
-
-            Ano
-
-            <input
-              id="year"
-              type="number"
-              min="1900"
-              max="2100"
-              class="rounded-xl
-                     px-4 py-3">
-
-          </label>
-
-
-          <!-- DIVISÃO -->
-
-          <label
-            class="grid gap-2
-                   text-sm">
-
-            Divisão
-
-            <select
-              id="division"
-              class="rounded-xl
-                     px-4 py-3">
-
-              <option
-                value="pictures">
-
-                UB. Pictures
-
-              </option>
-
-              <option
-                value="animation">
-
-                UB. Animation
-
-              </option>
-
-            </select>
-
-          </label>
-
-
-          <!-- COR -->
-
-          <label
-            class="grid gap-2
-                   text-sm">
-
-            Cor
-
-            <select
-              id="color"
-              class="rounded-xl
-                     px-4 py-3">
-
-              <option
-                value="#18bdf2">
-
-                Ciano
-
-              </option>
-
-              <option
-                value="#ff2525">
-
-                Vermelho
-
-              </option>
-
-              <option
-                value="#6d7cff">
-
-                Azul
-
-              </option>
-
-              <option
-                value="#ffffff">
-
-                Branco
-
-              </option>
-
-            </select>
-
-          </label>
-
-
-          <!-- DESCRIÇÃO -->
-
-          <label
-            class="md:col-span-2
-                   grid gap-2
-                   text-sm">
-
-            Descrição
-
-            <textarea
-              id="description"
-              rows="4"
-              class="rounded-xl
-                     px-4 py-3">
-            </textarea>
-
-          </label>
-
-
-          <!-- IMAGEM -->
-
-          <label
-            class="md:col-span-2
-                   grid gap-2
-                   text-sm">
-
-            Arte do projeto
-
-            <input
-              id="imageFile"
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              class="rounded-xl
-                     px-4 py-3">
-
-            <span
-              id="currentImage"
-              class="text-xs
-                     text-white/35">
-            </span>
-
-          </label>
-
-
-          <!-- DESTAQUE -->
-
-          <label
-            class="flex
-                   items-center
-                   gap-3">
-
-            <input
-              id="featured"
-              type="checkbox"
-              class="w-5 h-5">
-
-            Destaque
-
-          </label>
-
-
-          <!-- PUBLICADO -->
-
-          <label
-            class="flex
-                   items-center
-                   gap-3">
-
-            <input
-              id="published"
-              type="checkbox"
-              checked
-              class="w-5 h-5">
-
-            Publicado
-
-          </label>
-
-
-          <!-- BOTÕES -->
-
-          <div
-            class="md:col-span-2
-                   flex
-                   gap-3">
-
-            <button
-              type="submit"
-              class="rounded-xl
-                     bg-cyan-400
-                     text-black
-                     px-6 py-3
-                     font-black">
-
-              SALVAR
-
-            </button>
-
-
-            <button
-              type="button"
-              id="cancelBtn2"
-              class="rounded-xl
-                     border
-                     border-white/15
-                     px-6 py-3">
-
-              CANCELAR
-
-            </button>
-
-          </div>
-
-
-        </form>
-
       </div>
 
     </div>
 
-  </section>
-
-</main>
+  `;
 
 
-<!-- IMPORTANTE:
-     admin.js está na RAIZ -->
+  card
+    .querySelector(".editBtn")
+    .addEventListener(
+      "click",
+      () => editProject(project)
+    );
 
-<script
-  type="module"
-  src="admin.js">
-</script>
+
+  card
+    .querySelector(".deleteBtn")
+    .addEventListener(
+      "click",
+      () => deleteProject(project)
+    );
 
 
-<script>
+  projectList.appendChild(card);
 
-  if (window.lucide) {
-    lucide.createIcons();
+}
+
+
+// ===============================
+// NOVO PROJETO
+// ===============================
+
+newBtn?.addEventListener(
+  "click",
+  () => {
+
+    projectForm.reset();
+
+    projectId.value = "";
+
+    published.checked = true;
+
+    featured.checked = false;
+
+    currentImage.textContent = "";
+
+    formTitle.textContent =
+      "Novo projeto";
+
+    formWrap.classList.remove("hidden");
+
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth"
+    });
+
+  }
+);
+
+
+// ===============================
+// CANCELAR
+// ===============================
+
+function closeForm() {
+
+  formWrap?.classList.add("hidden");
+
+}
+
+
+cancelBtn?.addEventListener(
+  "click",
+  closeForm
+);
+
+
+cancelBtn2?.addEventListener(
+  "click",
+  closeForm
+);
+
+
+// ===============================
+// EDITAR
+// ===============================
+
+function editProject(project) {
+
+  projectId.value =
+    project.id;
+
+  title.value =
+    project.title || "";
+
+  year.value =
+    project.year || "";
+
+  division.value =
+    project.division || "pictures";
+
+  color.value =
+    project.color || "#18bdf2";
+
+  description.value =
+    project.description || "";
+
+  featured.checked =
+    !!project.featured;
+
+  published.checked =
+    !!project.published;
+
+  imageFile.value = "";
+
+  currentImage.textContent =
+    project.image_url
+      ? "Este projeto já possui uma imagem."
+      : "Nenhuma imagem cadastrada.";
+
+  formTitle.textContent =
+    "Editar projeto";
+
+
+  formWrap.classList.remove("hidden");
+
+
+  formWrap.scrollIntoView({
+    behavior: "smooth"
+  });
+
+}
+
+
+// ===============================
+// SALVAR PROJETO
+// ===============================
+
+projectForm?.addEventListener(
+  "submit",
+  async (event) => {
+
+    event.preventDefault();
+
+
+    const id =
+      projectId.value;
+
+
+    const projectData = {
+
+      title:
+        title.value.trim(),
+
+      year:
+        year.value
+          ? Number(year.value)
+          : null,
+
+      division:
+        division.value,
+
+      color:
+        color.value,
+
+      description:
+        description.value.trim(),
+
+      featured:
+        featured.checked,
+
+      published:
+        published.checked
+
+    };
+
+
+    setStatus("Salvando projeto...");
+
+
+    try {
+
+      // ==========================
+      // IMAGEM
+      // ==========================
+
+      let imageUrl =
+        null;
+
+
+      if (imageFile.files.length > 0) {
+
+        const file =
+          imageFile.files[0];
+
+
+        const extension =
+          file.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+        const fileName =
+          `${crypto.randomUUID()}.${extension}`;
+
+
+        const filePath =
+          fileName;
+
+
+        const {
+          error: uploadError
+        } =
+          await supabase.storage
+            .from(STORAGE_BUCKET)
+            .upload(
+              filePath,
+              file,
+              {
+                upsert: false,
+                contentType: file.type
+              }
+            );
+
+
+        if (uploadError) {
+
+          throw uploadError;
+
+        }
+
+
+        const {
+          data: publicData
+        } =
+          supabase.storage
+            .from(STORAGE_BUCKET)
+            .getPublicUrl(filePath);
+
+
+        imageUrl =
+          publicData.publicUrl;
+
+      }
+
+
+      // ==========================
+      // ATUALIZAR
+      // ==========================
+
+      if (id) {
+
+        if (imageUrl) {
+
+          projectData.image_url =
+            imageUrl;
+
+        }
+
+
+        const {
+          error
+        } =
+          await supabase
+            .from("projects")
+            .update(projectData)
+            .eq("id", id);
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        setStatus(
+          "Projeto atualizado com sucesso!"
+        );
+
+      }
+
+
+      // ==========================
+      // CRIAR
+      // ==========================
+
+      else {
+
+        projectData.image_url =
+          imageUrl;
+
+
+        const {
+          error
+        } =
+          await supabase
+            .from("projects")
+            .insert(projectData);
+
+
+        if (error) {
+
+          throw error;
+
+        }
+
+
+        setStatus(
+          "Projeto criado com sucesso!"
+        );
+
+      }
+
+
+      closeForm();
+
+      await loadProjects();
+
+    }
+
+    catch (error) {
+
+      console.error(error);
+
+      setStatus(
+        "Erro ao salvar: " +
+        error.message,
+        true
+      );
+
+    }
+
+  }
+);
+
+
+// ===============================
+// EXCLUIR
+// ===============================
+
+async function deleteProject(project) {
+
+  const confirmed =
+    confirm(
+      `Tem certeza que deseja excluir "${project.title}"?`
+    );
+
+
+  if (!confirmed) return;
+
+
+  setStatus("Excluindo projeto...");
+
+
+  const {
+    error
+  } =
+    await supabase
+      .from("projects")
+      .delete()
+      .eq("id", project.id);
+
+
+  if (error) {
+
+    setStatus(
+      "Erro ao excluir: " +
+      error.message,
+      true
+    );
+
+    return;
   }
 
-</script>
+
+  setStatus(
+    "Projeto excluído."
+  );
 
 
-</body>
-</html>
+  await loadProjects();
+
+}
+
+
+// ===============================
+// SEGURANÇA HTML
+// ===============================
+
+function escapeHtml(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+}
+
+
+// ===============================
+// VERIFICAR LOGIN
+// ===============================
+
+async function checkSession() {
+
+  if (DEMO_MODE) {
+
+    setStatus(
+      "Modo demonstração: configure o Supabase em config.js."
+    );
+
+    showLogin();
+
+    return;
+  }
+
+
+  const {
+    data
+  } =
+    await supabase.auth.getSession();
+
+
+  if (data.session) {
+
+    await showDashboard();
+
+  } else {
+
+    showLogin();
+
+  }
+
+}
+
+
+// ===============================
+// INICIAR
+// ===============================
+
+checkSession();
