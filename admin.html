@@ -1,1 +1,586 @@
-<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#05070b"><title>UB. Studio Manager</title><script src="https://cdn.tailwindcss.com"></script><script src="https://unpkg.com/lucide@latest"></script><style>body{background:#05070b;color:#fff}input,textarea,select{background:#0b1018;border:1px solid #243041}input:focus,textarea:focus,select:focus{outline:2px solid #18bdf2;outline-offset:2px}.glass{background:rgba(255,255,255,.045);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.1)}</style></head><body><main class="min-h-screen"><header class="border-b border-white/10"><div class="max-w-6xl mx-auto px-5 py-5 flex items-center justify-between"><a href="index.html" class="font-black tracking-[.15em]">UB. STUDIO MANAGER</a><button id="logout" class="hidden text-sm text-white/60 hover:text-white">Sair</button></div></header><section class="max-w-6xl mx-auto px-5 py-10"><div id="status" class="mb-6 text-sm text-white/50"></div><div id="loginView" class="max-w-md mx-auto glass rounded-3xl p-7"><h1 class="text-3xl font-black">Acesso administrativo</h1><p class="mt-2 text-white/45 text-sm">Entre com o usuário criado no Supabase Auth.</p><form id="loginForm" class="mt-7 space-y-4"><input id="email" type="email" required placeholder="E-mail" class="w-full rounded-xl px-4 py-3"><input id="password" type="password" required placeholder="Senha" class="w-full rounded-xl px-4 py-3"><button class="w-full rounded-xl bg-white text-black py-3 font-black">ENTRAR</button></form></div><div id="dashboard" class="hidden"><div class="flex flex-col sm:flex-row justify-between gap-4"><div><p class="text-cyan-300 text-xs font-black uppercase tracking-[.3em]">Catálogo</p><h1 class="mt-2 text-4xl font-black">Projetos</h1></div><button id="newBtn" class="rounded-full bg-white text-black px-5 py-3 font-black">+ NOVO PROJETO</button></div><div id="projectList" class="mt-8 grid md:grid-cols-2 gap-4"></div><div id="formWrap" class="hidden mt-10 glass rounded-3xl p-7"><div class="flex justify-between"><h2 id="formTitle" class="text-2xl font-black">Novo projeto</h2><button id="cancelBtn" aria-label="Fechar">✕</button></div><form id="projectForm" class="mt-7 grid md:grid-cols-2 gap-5"><input type="hidden" id="projectId"><label class="grid gap-2 text-sm">Nome<input id="title" required class="rounded-xl px-4 py-3"></label><label class="grid gap-2 text-sm">Ano<input id="year" type="number" min="1900" max="2100" class="rounded-xl px-4 py-3"></label><label class="grid gap-2 text-sm">Divisão<select id="division" class="rounded-xl px-4 py-3"><option value="pictures">UB. Pictures</option><option value="animation">UB. Animation</option></select></label><label class="grid gap-2 text-sm">Cor<select id="color" class="rounded-xl px-4 py-3"><option value="#18bdf2">Ciano</option><option value="#ff2525">Vermelho</option><option value="#6d7cff">Azul</option><option value="#ffffff">Branco</option></select></label><label class="md:col-span-2 grid gap-2 text-sm">Descrição<textarea id="description" rows="4" class="rounded-xl px-4 py-3"></textarea></label><label class="md:col-span-2 grid gap-2 text-sm">Arte do projeto<input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp" class="rounded-xl px-4 py-3"><span id="currentImage" class="text-xs text-white/35"></span></label><label class="flex items-center gap-3"><input id="featured" type="checkbox" class="w-5 h-5"> Destaque</label><label class="flex items-center gap-3"><input id="published" type="checkbox" checked class="w-5 h-5"> Publicado</label><div class="md:col-span-2 flex gap-3"><button class="rounded-xl bg-cyan-400 text-black px-6 py-3 font-black">SALVAR</button><button type="button" id="cancelBtn2" class="rounded-xl border border-white/15 px-6 py-3">CANCELAR</button></div></form></div></div></section></main><script type="module" src="js/admin.js"></script></body></html>
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1">
+
+  <meta
+    name="theme-color"
+    content="#05070b">
+
+  <title>
+    UB. Studio Manager
+  </title>
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <style>
+
+    body {
+      background: #05070b;
+      color: white;
+      font-family:
+        Inter,
+        system-ui,
+        sans-serif;
+    }
+
+    input,
+    textarea,
+    select {
+
+      background: #0b1018;
+
+      border:
+        1px solid #243041;
+
+      color: white;
+
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+
+      outline:
+        2px solid #18bdf2;
+
+      outline-offset:
+        2px;
+
+    }
+
+    .glass {
+
+      background:
+        rgba(255,255,255,.045);
+
+      backdrop-filter:
+        blur(18px);
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<main class="min-h-screen">
+
+
+  <!-- HEADER -->
+
+  <header
+    class="border-b
+           border-white/10">
+
+    <div
+      class="max-w-6xl mx-auto
+             px-5 py-5
+             flex items-center
+             justify-between">
+
+      <a
+        href="index.html"
+        class="font-black
+               tracking-[.15em]">
+
+        UB. STUDIO MANAGER
+
+      </a>
+
+
+      <button
+        id="logout"
+        class="hidden
+               text-sm
+               text-white/60
+               hover:text-white">
+
+        Sair
+
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- CONTEÚDO -->
+
+  <section
+    class="max-w-6xl mx-auto
+           px-5 py-10">
+
+
+    <div
+      id="status"
+      class="mb-6
+             text-sm
+             text-white/50">
+    </div>
+
+
+    <!-- LOGIN -->
+
+    <div
+      id="loginView"
+      class="max-w-md mx-auto
+             glass rounded-3xl
+             p-7">
+
+      <h1
+        class="text-3xl
+               font-black">
+
+        Acesso administrativo
+
+      </h1>
+
+
+      <p
+        class="mt-2
+               text-white/45
+               text-sm">
+
+        Entre com o usuário
+        criado no Supabase Auth.
+
+      </p>
+
+
+      <form
+        id="loginForm"
+        class="mt-7
+               space-y-4">
+
+
+        <input
+          id="email"
+          type="email"
+          required
+          placeholder="E-mail"
+          class="w-full
+                 rounded-xl
+                 px-4 py-3">
+
+
+        <input
+          id="password"
+          type="password"
+          required
+          placeholder="Senha"
+          class="w-full
+                 rounded-xl
+                 px-4 py-3">
+
+
+        <button
+          type="submit"
+          class="w-full
+                 rounded-xl
+                 bg-white
+                 text-black
+                 py-3
+                 font-black">
+
+          ENTRAR
+
+        </button>
+
+
+      </form>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+
+    <div
+      id="dashboard"
+      class="hidden">
+
+
+      <div
+        class="flex
+               flex-col
+               sm:flex-row
+               justify-between
+               gap-4">
+
+
+        <div>
+
+          <p
+            class="text-cyan-300
+                   text-xs
+                   font-black
+                   uppercase
+                   tracking-[.3em]">
+
+            Catálogo
+
+          </p>
+
+
+          <h1
+            class="mt-2
+                   text-4xl
+                   font-black">
+
+            Projetos
+
+          </h1>
+
+        </div>
+
+
+        <button
+          id="newBtn"
+          class="rounded-full
+                 bg-white
+                 text-black
+                 px-5 py-3
+                 font-black">
+
+          + NOVO PROJETO
+
+        </button>
+
+      </div>
+
+
+      <!-- LISTA -->
+
+      <div
+        id="projectList"
+        class="mt-8
+               grid
+               md:grid-cols-2
+               gap-4">
+      </div>
+
+
+      <!-- FORMULÁRIO -->
+
+      <div
+        id="formWrap"
+        class="hidden
+               mt-10
+               glass
+               rounded-3xl
+               p-7">
+
+
+        <div
+          class="flex
+                 justify-between">
+
+          <h2
+            id="formTitle"
+            class="text-2xl
+                   font-black">
+
+            Novo projeto
+
+          </h2>
+
+
+          <button
+            id="cancelBtn"
+            aria-label="Fechar">
+
+            ✕
+
+          </button>
+
+        </div>
+
+
+        <form
+          id="projectForm"
+          class="mt-7
+                 grid
+                 md:grid-cols-2
+                 gap-5">
+
+
+          <input
+            type="hidden"
+            id="projectId">
+
+
+          <!-- NOME -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Nome
+
+            <input
+              id="title"
+              required
+              class="rounded-xl
+                     px-4 py-3">
+
+          </label>
+
+
+          <!-- ANO -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Ano
+
+            <input
+              id="year"
+              type="number"
+              min="1900"
+              max="2100"
+              class="rounded-xl
+                     px-4 py-3">
+
+          </label>
+
+
+          <!-- DIVISÃO -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Divisão
+
+            <select
+              id="division"
+              class="rounded-xl
+                     px-4 py-3">
+
+              <option
+                value="pictures">
+
+                UB. Pictures
+
+              </option>
+
+              <option
+                value="animation">
+
+                UB. Animation
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <!-- COR -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Cor
+
+            <select
+              id="color"
+              class="rounded-xl
+                     px-4 py-3">
+
+              <option
+                value="#18bdf2">
+
+                Ciano
+
+              </option>
+
+              <option
+                value="#ff2525">
+
+                Vermelho
+
+              </option>
+
+              <option
+                value="#6d7cff">
+
+                Azul
+
+              </option>
+
+              <option
+                value="#ffffff">
+
+                Branco
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <!-- DESCRIÇÃO -->
+
+          <label
+            class="md:col-span-2
+                   grid gap-2
+                   text-sm">
+
+            Descrição
+
+            <textarea
+              id="description"
+              rows="4"
+              class="rounded-xl
+                     px-4 py-3">
+            </textarea>
+
+          </label>
+
+
+          <!-- IMAGEM -->
+
+          <label
+            class="md:col-span-2
+                   grid gap-2
+                   text-sm">
+
+            Arte do projeto
+
+            <input
+              id="imageFile"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              class="rounded-xl
+                     px-4 py-3">
+
+            <span
+              id="currentImage"
+              class="text-xs
+                     text-white/35">
+            </span>
+
+          </label>
+
+
+          <!-- DESTAQUE -->
+
+          <label
+            class="flex
+                   items-center
+                   gap-3">
+
+            <input
+              id="featured"
+              type="checkbox"
+              class="w-5 h-5">
+
+            Destaque
+
+          </label>
+
+
+          <!-- PUBLICADO -->
+
+          <label
+            class="flex
+                   items-center
+                   gap-3">
+
+            <input
+              id="published"
+              type="checkbox"
+              checked
+              class="w-5 h-5">
+
+            Publicado
+
+          </label>
+
+
+          <!-- BOTÕES -->
+
+          <div
+            class="md:col-span-2
+                   flex
+                   gap-3">
+
+            <button
+              type="submit"
+              class="rounded-xl
+                     bg-cyan-400
+                     text-black
+                     px-6 py-3
+                     font-black">
+
+              SALVAR
+
+            </button>
+
+
+            <button
+              type="button"
+              id="cancelBtn2"
+              class="rounded-xl
+                     border
+                     border-white/15
+                     px-6 py-3">
+
+              CANCELAR
+
+            </button>
+
+          </div>
+
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- IMPORTANTE:
+     admin.js está na RAIZ -->
+
+<script
+  type="module"
+  src="admin.js">
+</script>
+
+
+<script>
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+</script>
+
+
+</body>
+  </html>
