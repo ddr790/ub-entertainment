@@ -1,13 +1,586 @@
-import { SUPABASE_URL,SUPABASE_ANON_KEY,STORAGE_BUCKET,DEMO_MODE } from './config.js';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-const supabase=DEMO_MODE?null:createClient(SUPABASE_URL,SUPABASE_ANON_KEY);const $=s=>document.querySelector(s);let session=null;let records=[];
-const status=m=>$('#status').textContent=m||'';
-function showDash(){ $('#loginView').classList.add('hidden');$('#dashboard').classList.remove('hidden');$('#logout').classList.remove('hidden');load(); }
-async function load(){const {data,error}=await supabase.from('projects').select('*').order('created_at',{ascending:false});if(error){status(error.message);return}records=data||[];$('#projectList').innerHTML=records.map(p=>`<article class="glass rounded-2xl p-5"><div class="flex justify-between gap-4"><div><p class="text-[10px] uppercase tracking-[.2em]" style="color:${p.color}">UB. ${p.division}</p><h3 class="text-xl font-black mt-1">${escape(p.title)}</h3><p class="text-sm text-white/40 mt-2">${p.year||''} · ${p.published?'Publicado':'Oculto'}</p></div><div class="flex gap-2"><button data-edit="${p.id}" class="rounded-lg border border-white/10 px-3 py-2 text-xs">Editar</button><button data-delete="${p.id}" class="rounded-lg border border-red-400/20 text-red-300 px-3 py-2 text-xs">Excluir</button></div></div></article>`).join('');document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>edit(b.dataset.edit));document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>remove(b.dataset.delete));}
-function escape(v=''){return v.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-function openForm(p){$('#formWrap').classList.remove('hidden');$('#projectId').value=p?.id||'';$('#title').value=p?.title||'';$('#year').value=p?.year||'';$('#division').value=p?.division||'pictures';$('#color').value=p?.color||'#18bdf2';$('#description').value=p?.description||'';$('#featured').checked=!!p?.featured;$('#published').checked=p?p.published!==false:true;$('#currentImage').textContent=p?.image_url?'Arte atual: armazenada no Storage':'';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});}
-function edit(id){openForm(records.find(p=>p.id===id))}async function remove(id){if(!confirm('Excluir este projeto?'))return;const {error}=await supabase.from('projects').delete().eq('id',id);if(error)status(error.message);else load()}
-$('#loginForm').addEventListener('submit',async e=>{e.preventDefault();if(DEMO_MODE){status('Configure o Supabase para ativar o painel.');return}const {data,error}=await supabase.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){status(error.message);return}session=data.session;showDash()});$('#logout').onclick=async()=>{await supabase.auth.signOut();location.reload()};$('#newBtn').onclick=()=>openForm();['cancelBtn','cancelBtn2'].forEach(id=>$('#'+id).onclick=()=>$('#formWrap').classList.add('hidden'));
-$('#projectForm').addEventListener('submit',async e=>{e.preventDefault();if(!session){status('Sessão expirada.');return}const id=$('#projectId').value;let imageUrl=records.find(p=>p.id===id)?.image_url||null;const file=$('#imageFile').files[0];if(file){const ext=file.name.split('.').pop().toLowerCase();const path=`${crypto.randomUUID()}.${ext}`;const up=await supabase.storage.from(STORAGE_BUCKET).upload(path,file,{upsert:false,contentType:file.type});if(up.error){status(up.error.message);return}imageUrl=supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path).data.publicUrl}
-const payload={title:$('#title').value.trim(),year:Number($('#year').value)||null,division:$('#division').value,color:$('#color').value,description:$('#description').value.trim(),image_url:imageUrl,featured:$('#featured').checked,published:$('#published').checked};let res=id?await supabase.from('projects').update(payload).eq('id',id):await supabase.from('projects').insert(payload);if(res.error){status(res.error.message);return}$('#formWrap').classList.add('hidden');status('Salvo com sucesso.');load()});
-if(!DEMO_MODE){supabase.auth.getSession().then(({data})=>{session=data.session;if(session)showDash()});supabase.auth.onAuthStateChange((_e,s)=>{session=s})}else status('Modo demonstração: o site público funciona, mas o Studio Manager precisa de Supabase.');
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1">
+
+  <meta
+    name="theme-color"
+    content="#05070b">
+
+  <title>
+    UB. Studio Manager
+  </title>
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+
+  <style>
+
+    body {
+      background: #05070b;
+      color: white;
+      font-family:
+        Inter,
+        system-ui,
+        sans-serif;
+    }
+
+    input,
+    textarea,
+    select {
+
+      background: #0b1018;
+
+      border:
+        1px solid #243041;
+
+      color: white;
+
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+
+      outline:
+        2px solid #18bdf2;
+
+      outline-offset:
+        2px;
+
+    }
+
+    .glass {
+
+      background:
+        rgba(255,255,255,.045);
+
+      backdrop-filter:
+        blur(18px);
+
+      border:
+        1px solid
+        rgba(255,255,255,.1);
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+<main class="min-h-screen">
+
+
+  <!-- HEADER -->
+
+  <header
+    class="border-b
+           border-white/10">
+
+    <div
+      class="max-w-6xl mx-auto
+             px-5 py-5
+             flex items-center
+             justify-between">
+
+      <a
+        href="index.html"
+        class="font-black
+               tracking-[.15em]">
+
+        UB. STUDIO MANAGER
+
+      </a>
+
+
+      <button
+        id="logout"
+        class="hidden
+               text-sm
+               text-white/60
+               hover:text-white">
+
+        Sair
+
+      </button>
+
+    </div>
+
+  </header>
+
+
+  <!-- CONTEÚDO -->
+
+  <section
+    class="max-w-6xl mx-auto
+           px-5 py-10">
+
+
+    <div
+      id="status"
+      class="mb-6
+             text-sm
+             text-white/50">
+    </div>
+
+
+    <!-- LOGIN -->
+
+    <div
+      id="loginView"
+      class="max-w-md mx-auto
+             glass rounded-3xl
+             p-7">
+
+      <h1
+        class="text-3xl
+               font-black">
+
+        Acesso administrativo
+
+      </h1>
+
+
+      <p
+        class="mt-2
+               text-white/45
+               text-sm">
+
+        Entre com o usuário
+        criado no Supabase Auth.
+
+      </p>
+
+
+      <form
+        id="loginForm"
+        class="mt-7
+               space-y-4">
+
+
+        <input
+          id="email"
+          type="email"
+          required
+          placeholder="E-mail"
+          class="w-full
+                 rounded-xl
+                 px-4 py-3">
+
+
+        <input
+          id="password"
+          type="password"
+          required
+          placeholder="Senha"
+          class="w-full
+                 rounded-xl
+                 px-4 py-3">
+
+
+        <button
+          type="submit"
+          class="w-full
+                 rounded-xl
+                 bg-white
+                 text-black
+                 py-3
+                 font-black">
+
+          ENTRAR
+
+        </button>
+
+
+      </form>
+
+    </div>
+
+
+    <!-- DASHBOARD -->
+
+    <div
+      id="dashboard"
+      class="hidden">
+
+
+      <div
+        class="flex
+               flex-col
+               sm:flex-row
+               justify-between
+               gap-4">
+
+
+        <div>
+
+          <p
+            class="text-cyan-300
+                   text-xs
+                   font-black
+                   uppercase
+                   tracking-[.3em]">
+
+            Catálogo
+
+          </p>
+
+
+          <h1
+            class="mt-2
+                   text-4xl
+                   font-black">
+
+            Projetos
+
+          </h1>
+
+        </div>
+
+
+        <button
+          id="newBtn"
+          class="rounded-full
+                 bg-white
+                 text-black
+                 px-5 py-3
+                 font-black">
+
+          + NOVO PROJETO
+
+        </button>
+
+      </div>
+
+
+      <!-- LISTA -->
+
+      <div
+        id="projectList"
+        class="mt-8
+               grid
+               md:grid-cols-2
+               gap-4">
+      </div>
+
+
+      <!-- FORMULÁRIO -->
+
+      <div
+        id="formWrap"
+        class="hidden
+               mt-10
+               glass
+               rounded-3xl
+               p-7">
+
+
+        <div
+          class="flex
+                 justify-between">
+
+          <h2
+            id="formTitle"
+            class="text-2xl
+                   font-black">
+
+            Novo projeto
+
+          </h2>
+
+
+          <button
+            id="cancelBtn"
+            aria-label="Fechar">
+
+            ✕
+
+          </button>
+
+        </div>
+
+
+        <form
+          id="projectForm"
+          class="mt-7
+                 grid
+                 md:grid-cols-2
+                 gap-5">
+
+
+          <input
+            type="hidden"
+            id="projectId">
+
+
+          <!-- NOME -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Nome
+
+            <input
+              id="title"
+              required
+              class="rounded-xl
+                     px-4 py-3">
+
+          </label>
+
+
+          <!-- ANO -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Ano
+
+            <input
+              id="year"
+              type="number"
+              min="1900"
+              max="2100"
+              class="rounded-xl
+                     px-4 py-3">
+
+          </label>
+
+
+          <!-- DIVISÃO -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Divisão
+
+            <select
+              id="division"
+              class="rounded-xl
+                     px-4 py-3">
+
+              <option
+                value="pictures">
+
+                UB. Pictures
+
+              </option>
+
+              <option
+                value="animation">
+
+                UB. Animation
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <!-- COR -->
+
+          <label
+            class="grid gap-2
+                   text-sm">
+
+            Cor
+
+            <select
+              id="color"
+              class="rounded-xl
+                     px-4 py-3">
+
+              <option
+                value="#18bdf2">
+
+                Ciano
+
+              </option>
+
+              <option
+                value="#ff2525">
+
+                Vermelho
+
+              </option>
+
+              <option
+                value="#6d7cff">
+
+                Azul
+
+              </option>
+
+              <option
+                value="#ffffff">
+
+                Branco
+
+              </option>
+
+            </select>
+
+          </label>
+
+
+          <!-- DESCRIÇÃO -->
+
+          <label
+            class="md:col-span-2
+                   grid gap-2
+                   text-sm">
+
+            Descrição
+
+            <textarea
+              id="description"
+              rows="4"
+              class="rounded-xl
+                     px-4 py-3">
+            </textarea>
+
+          </label>
+
+
+          <!-- IMAGEM -->
+
+          <label
+            class="md:col-span-2
+                   grid gap-2
+                   text-sm">
+
+            Arte do projeto
+
+            <input
+              id="imageFile"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              class="rounded-xl
+                     px-4 py-3">
+
+            <span
+              id="currentImage"
+              class="text-xs
+                     text-white/35">
+            </span>
+
+          </label>
+
+
+          <!-- DESTAQUE -->
+
+          <label
+            class="flex
+                   items-center
+                   gap-3">
+
+            <input
+              id="featured"
+              type="checkbox"
+              class="w-5 h-5">
+
+            Destaque
+
+          </label>
+
+
+          <!-- PUBLICADO -->
+
+          <label
+            class="flex
+                   items-center
+                   gap-3">
+
+            <input
+              id="published"
+              type="checkbox"
+              checked
+              class="w-5 h-5">
+
+            Publicado
+
+          </label>
+
+
+          <!-- BOTÕES -->
+
+          <div
+            class="md:col-span-2
+                   flex
+                   gap-3">
+
+            <button
+              type="submit"
+              class="rounded-xl
+                     bg-cyan-400
+                     text-black
+                     px-6 py-3
+                     font-black">
+
+              SALVAR
+
+            </button>
+
+
+            <button
+              type="button"
+              id="cancelBtn2"
+              class="rounded-xl
+                     border
+                     border-white/15
+                     px-6 py-3">
+
+              CANCELAR
+
+            </button>
+
+          </div>
+
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+
+<!-- IMPORTANTE:
+     admin.js está na RAIZ -->
+
+<script
+  type="module"
+  src="admin.js">
+</script>
+
+
+<script>
+
+  if (window.lucide) {
+    lucide.createIcons();
+  }
+
+</script>
+
+
+</body>
+</html>
