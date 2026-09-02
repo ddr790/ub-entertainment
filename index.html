@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Universal Brothers Entertainment — histórias, cinema e animação." />
+  <meta name="theme-color" content="#05070b" />
+  <meta property="og:title" content="Universal Brothers Entertainment" />
+  <meta property="og:description" content="We create worlds." />
+  <meta property="og:type" content="website" />
+  <title>Universal Brothers Entertainment — UB.</title>
+  <link rel="icon" href="assets/ub-shield.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','ui-sans-serif','system-ui'],display:['Arial Black','Inter','sans-serif']}}}}</script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root{--cyan:#18bdf2;--blue:#0a4cff;--red:#ff2525;--ink:#05070b}
+    html{scroll-behavior:smooth}body{background:var(--ink);color:#fff;font-family:Inter,system-ui,sans-serif}
+    .film-grain{pointer-events:none;position:fixed;inset:0;z-index:60;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.9'/%3E%3C/svg%3E")}
+    .scan{background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(255,255,255,.018) 4px)}
+    .hero{background:radial-gradient(circle at 68% 35%,rgba(19,91,190,.42),transparent 32%),radial-gradient(circle at 30% 80%,rgba(0,198,255,.12),transparent 35%),linear-gradient(125deg,#071a3b 0%,#05070b 58%,#000 100%)}
+    .orb{box-shadow:0 0 100px rgba(24,189,242,.18),inset 0 0 80px rgba(255,255,255,.03)}
+    .gridline{background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:64px 64px}
+    .glass{background:rgba(255,255,255,.045);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.11)}
+    .card{transform:translateZ(0);transition:transform .55s cubic-bezier(.2,.8,.2,1),border-color .4s,box-shadow .4s}
+    .card:hover{transform:translateY(-8px) scale(1.01);border-color:rgba(255,255,255,.28);box-shadow:0 30px 80px rgba(0,0,0,.45)}
+    .card img{transition:transform .9s cubic-bezier(.2,.8,.2,1),filter .5s}.card:hover img{transform:scale(1.055);filter:saturate(1.08)}
+    .reveal{opacity:0;transform:translateY(22px);transition:opacity .8s ease,transform .8s ease}.reveal.is-visible{opacity:1;transform:none}
+    .focus-ring:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+    .progress{transform-origin:left;transform:scaleX(0)}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{transition:none}.card,.card img{transition:none}}
+  </style>
+</head>
+<body>
+  <a class="sr-only focus:not-sr-only focus-ring fixed top-4 left-4 z-[100] rounded-full bg-white px-4 py-2 text-black" href="#main">Pular para o conteúdo</a>
+  <div class="film-grain"></div><div class="scan fixed inset-0 pointer-events-none z-50"></div><div id="progress" class="progress fixed top-0 left-0 right-0 h-1 bg-cyan-400 z-[90]"></div>
+
+  <header id="siteHeader" class="fixed top-0 inset-x-0 z-40 transition-all duration-500">
+    <nav class="mx-auto max-w-7xl px-5 py-5 flex items-center justify-between" aria-label="Principal">
+      <a href="#top" class="focus-ring flex items-center gap-3 min-w-0" aria-label="Universal Brothers Entertainment, início">
+        <img src="assets/ub-shield.png" alt="UB." class="w-10 h-10 object-contain brightness-0 invert" />
+        <span class="hidden sm:block text-[10px] sm:text-xs font-black tracking-[.14em] leading-tight uppercase">Universal Brothers<br>Entertainment</span>
+      </a>
+      <div class="hidden md:flex items-center gap-8 text-xs font-semibold uppercase tracking-[.18em]">
+        <a class="focus-ring hover:text-cyan-300 transition" href="#company">Nossa Empresa</a>
+        <a class="focus-ring hover:text-cyan-300 transition" href="#projects">Projetos</a>
+        <a class="focus-ring hover:text-cyan-300 transition" href="#careers">Carreiras</a>
+        <a class="focus-ring hover:text-cyan-300 transition" href="#investors">Investidores</a>
+      </div>
+      <button id="menuBtn" class="md:hidden focus-ring glass rounded-full p-3" aria-expanded="false" aria-controls="mobileMenu" aria-label="Abrir menu"><i data-lucide="menu"></i></button>
+    </nav>
+    <div id="mobileMenu" class="hidden md:hidden mx-4 mb-4 glass rounded-2xl p-5">
+      <div class="grid gap-4 text-sm uppercase tracking-[.16em] font-bold">
+        <a href="#company">Nossa Empresa</a><a href="#projects">Projetos</a><a href="#careers">Carreiras</a><a href="#investors">Investidores</a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <section id="top" class="hero min-h-screen relative overflow-hidden flex items-center pt-28">
+      <div class="absolute inset-0 gridline opacity-30"></div>
+      <div class="absolute -right-40 -top-40 w-[600px] h-[600px] rounded-full border border-white/10 orb"></div>
+      <div class="absolute right-[12%] top-[18%] w-1/2 max-w-[650px] aspect-square rounded-full border border-cyan-300/10 orb opacity-50"></div>
+      <img src="assets/ub-shield.png" alt="" aria-hidden="true" class="absolute right-[5%] bottom-[-8%] w-[48vw] max-w-[700px] opacity-[.055] grayscale brightness-200 select-none" />
+      <div class="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-black/40 to-transparent"></div>
+      <div class="relative z-10 max-w-7xl mx-auto w-full px-5">
+        <div class="max-w-5xl reveal">
+          <p class="text-cyan-300 text-xs font-black uppercase tracking-[.35em] mb-7">UB. / ENTERTAINMENT GROUP</p>
+          <h1 class="font-display font-black uppercase tracking-[-.055em] leading-[.82] text-[clamp(4.2rem,12vw,10.5rem)]">We create<br><span class="text-white/85">worlds.</span></h1>
+          <div class="mt-9 flex flex-wrap items-center gap-x-6 gap-y-2 min-h-10" aria-live="polite">
+            <span id="ticker" class="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight"></span>
+          </div>
+          <p class="mt-7 max-w-xl text-white/65 text-base sm:text-lg leading-relaxed">Uma nova casa para histórias que atravessam telas, gerações e fronteiras.</p>
+          <div class="mt-9 flex flex-wrap gap-4">
+            <a href="#projects" class="focus-ring inline-flex items-center gap-3 rounded-full bg-white text-black px-6 py-3.5 font-black text-sm uppercase tracking-wide hover:bg-cyan-300 transition">Explorar projetos <i data-lucide="arrow-up-right"></i></a>
+            <a href="#careers" class="focus-ring inline-flex items-center gap-3 rounded-full border border-white/25 px-6 py-3.5 font-black text-sm uppercase tracking-wide hover:border-white hover:bg-white/5 transition">Buscar oportunidades <i data-lucide="arrow-up-right"></i></a>
+          </div>
+        </div>
+      </div>
+      <div class="absolute bottom-7 left-5 right-5 flex justify-between text-[10px] uppercase tracking-[.28em] text-white/35"><span>EST. 2026</span><span>01 / 04</span></div>
+    </section>
+
+    <section id="company" class="relative overflow-hidden py-28 sm:py-36 bg-gradient-to-b from-[#071a35] to-[#061022]">
+      <div class="max-w-7xl mx-auto px-5 grid lg:grid-cols-[1.1fr_.9fr] gap-16 items-center">
+        <div class="reveal"><p class="text-cyan-300 text-xs font-black uppercase tracking-[.3em]">01 — Nossa Empresa</p><h2 class="mt-5 text-4xl sm:text-6xl font-black tracking-tight">Histórias com<br><span class="text-white/45">escala global.</span></h2><p class="mt-7 text-white/60 text-lg leading-relaxed max-w-2xl">A Universal Brothers Entertainment reúne cinema, animação e novas experiências de entretenimento em uma identidade única. Este espaço foi desenhado para crescer com o catálogo.</p></div>
+        <div class="reveal relative aspect-square max-w-[520px] mx-auto w-full"><div class="absolute inset-0 rounded-full border border-cyan-300/20"></div><div class="absolute inset-[10%] rounded-full border border-white/10"></div><div class="absolute inset-[20%] rounded-full border border-white/10"></div><div class="absolute inset-[30%] rounded-full bg-cyan-400/5 border border-cyan-300/10"></div><div class="absolute inset-0 flex items-center justify-center"><img src="assets/ub-shield.png" alt="UB." class="w-28 sm:w-40 drop-shadow-[0_0_40px_rgba(24,189,242,.25)]" /></div><div class="absolute inset-0 rounded-full animate-[spin_30s_linear_infinite] border-t border-cyan-300/40"></div></div>
+      </div>
+    </section>
+
+    <section id="projects" class="py-28 sm:py-36 bg-[#05070b]">
+      <div class="max-w-7xl mx-auto px-5">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-7 reveal"><div><p class="text-cyan-300 text-xs font-black uppercase tracking-[.3em]">02 — Projects</p><h2 class="mt-4 text-4xl sm:text-6xl font-black tracking-tight">Nosso catálogo.</h2></div><div class="flex gap-2" role="group" aria-label="Filtrar projetos"><button data-filter="all" class="filterBtn focus-ring rounded-full px-4 py-2 text-xs font-black uppercase bg-white text-black">Todos</button><button data-filter="pictures" class="filterBtn focus-ring rounded-full px-4 py-2 text-xs font-black uppercase bg-white/5">Pictures</button><button data-filter="animation" class="filterBtn focus-ring rounded-full px-4 py-2 text-xs font-black uppercase bg-white/5">Animation</button></div></div>
+        <div id="projectsGrid" class="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+        <div id="emptyState" class="hidden mt-12 glass rounded-3xl p-12 text-center text-white/55">Nenhum projeto publicado nesta categoria.</div>
+      </div>
+    </section>
+
+    <section id="careers" class="py-28 sm:py-36 bg-gradient-to-br from-[#0a2a54] to-[#061022]">
+      <div class="max-w-7xl mx-auto px-5 grid lg:grid-cols-2 gap-12 items-center"><div class="reveal"><p class="text-cyan-300 text-xs font-black uppercase tracking-[.3em]">03 — Carreiras</p><h2 class="mt-5 text-4xl sm:text-6xl font-black">Entre para<br><span class="text-white/45">o universo.</span></h2><p class="mt-7 text-white/65 text-lg leading-relaxed max-w-xl">Direção, roteiro, animação, tecnologia, produção e tudo que transforma uma ideia em experiência.</p><a href="mailto:careers@universalbrothers.example" class="focus-ring mt-9 inline-flex items-center gap-3 rounded-full bg-white text-black px-6 py-3.5 font-black uppercase text-sm">Falar com Careers <i data-lucide="arrow-up-right"></i></a></div><div class="glass rounded-3xl p-8 reveal"><div class="text-xs uppercase tracking-[.25em] text-white/35">Open roles</div><div class="mt-7 space-y-3"><div class="flex justify-between border-b border-white/10 pb-4"><span>Creative</span><span class="text-white/45">Coming soon</span></div><div class="flex justify-between border-b border-white/10 pb-4"><span>Production</span><span class="text-white/45">Coming soon</span></div><div class="flex justify-between"><span>Technology</span><span class="text-white/45">Coming soon</span></div></div></div></div>
+    </section>
+
+    <section id="investors" class="py-28 sm:py-36 bg-[#05070b]"><div class="max-w-7xl mx-auto px-5"><div class="reveal"><p class="text-cyan-300 text-xs font-black uppercase tracking-[.3em]">04 — Investidores</p><h2 class="mt-5 text-4xl sm:text-6xl font-black">Construindo<br><span class="text-white/45">o próximo capítulo.</span></h2><p class="mt-7 max-w-2xl text-white/60 text-lg leading-relaxed">Uma área reservada para comunicados, documentos, resultados e informações corporativas da UB.</p></div></div></section>
+  </main>
+
+  <footer class="border-t border-white/10 bg-black py-16"><div class="max-w-7xl mx-auto px-5 text-center"><div class="flex justify-center gap-3 mb-8"><a class="focus-ring glass rounded-full p-3 hover:bg-white/10" href="#" aria-label="X"><i data-lucide="twitter"></i></a><a class="focus-ring glass rounded-full p-3 hover:bg-white/10" href="#" aria-label="Instagram"><i data-lucide="instagram"></i></a><a class="focus-ring glass rounded-full p-3 hover:bg-white/10" href="#" aria-label="Facebook"><i data-lucide="facebook"></i></a><a class="focus-ring glass rounded-full p-3 hover:bg-white/10" href="#" aria-label="YouTube"><i data-lucide="youtube"></i></a><a class="focus-ring glass rounded-full p-3 hover:bg-white/10" href="#" aria-label="LinkedIn"><i data-lucide="linkedin"></i></a></div><img src="assets/ub-shield.png" alt="UB." class="w-20 h-20 mx-auto brightness-0 invert" loading="lazy"><p class="mt-5 text-xs font-black tracking-[.22em] uppercase">Universal Brothers Entertainment</p><p class="mt-3 text-[10px] text-white/35 uppercase tracking-[.2em]">© 2026 UB. All rights reserved.</p><a href="admin.html" class="inline-block mt-8 text-[10px] text-white/20 hover:text-white/50">Studio Manager</a></div></footer>
+
+  <script type="module" src="js/main.js"></script>
+</body></html>
